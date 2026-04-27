@@ -1,12 +1,12 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { format, addMinutes, isBefore, startOfDay } from 'date-fns'
 
 const STEPS = ['Услуга', 'Мастер', 'Дата и время', 'Контакты', 'Подтверждение']
 
-export default function BookingPage() {
+function BookingContent() {
   const searchParams = useSearchParams()
   const initialServiceId = searchParams.get('service')
 
@@ -30,13 +30,11 @@ export default function BookingPage() {
     ]).then(([s, b]) => {
       setServices(s.data || [])
       setBarbers(b.data || [])
-
-      // Если передан параметр service, выбираем услугу и переходим к шагу выбора мастера
       if (initialServiceId) {
         const found = (s.data || []).find(svc => svc.id === initialServiceId)
         if (found) {
           setSelectedService(found)
-          setStep(1) // сразу к выбору мастера
+          setStep(1)
         }
       }
     })
@@ -114,8 +112,6 @@ export default function BookingPage() {
   return (
     <div className="container mx-auto px-4 py-10 max-w-2xl">
       <h1 className="text-3xl font-bold mb-6 text-center">Онлайн-запись</h1>
-
-      {/* Индикатор шагов (только если не перешли сразу с услуги) */}
       {step !== 1 || !initialServiceId ? (
         <div className="flex justify-center mb-8">
           {STEPS.map((s, i) => (
@@ -130,7 +126,6 @@ export default function BookingPage() {
           Выбрана услуга: <strong className="text-amber-500">{selectedService?.name}</strong>. Выберите мастера.
         </div>
       )}
-
       {step === 0 && (
         <div className="grid gap-4">
           {services.map(service => (
@@ -143,7 +138,6 @@ export default function BookingPage() {
           ))}
         </div>
       )}
-
       {step === 1 && (
         <div className="grid gap-4">
           {barbers.map(barber => (
@@ -157,7 +151,6 @@ export default function BookingPage() {
           <button onClick={handleBack} className="text-amber-500 hover:underline mt-2">← Назад</button>
         </div>
       )}
-
       {step === 2 && (
         <div>
           <div className="mb-4">
@@ -180,7 +173,6 @@ export default function BookingPage() {
           <button onClick={handleBack} className="text-amber-500 hover:underline mt-4">← Назад</button>
         </div>
       )}
-
       {step === 3 && (
         <div className="max-w-md mx-auto space-y-4">
           <input placeholder="Ваше имя" value={clientName} onChange={e => setClientName(e.target.value)}
@@ -197,7 +189,6 @@ export default function BookingPage() {
           {bookingError && <p className="text-red-500">{bookingError}</p>}
         </div>
       )}
-
       {step === 5 && (
         <div className="text-center text-green-400 text-2xl font-bold">
           ✅ Запись создана! <br />
@@ -211,5 +202,13 @@ export default function BookingPage() {
         </div>
       )}
     </div>
+  )
+}
+
+export default function BookingPage() {
+  return (
+    <Suspense fallback={<div className="text-center py-20">Загрузка...</div>}>
+      <BookingContent />
+    </Suspense>
   )
 }
