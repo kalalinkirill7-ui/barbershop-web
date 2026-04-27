@@ -8,7 +8,9 @@ export default function AdminServices() {
   const [price, setPrice] = useState('')
   const [duration, setDuration] = useState('')
   const [description, setDescription] = useState('')
+  const [photoFile, setPhotoFile] = useState(null)
   const [editId, setEditId] = useState(null)
+  const [uploading, setUploading] = useState(false)
 
   useEffect(() => { loadServices() }, [])
 
@@ -17,16 +19,38 @@ export default function AdminServices() {
     setServices(data || [])
   }
 
+  const uploadPhoto = async (file) => {
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${Date.now()}.${fileExt}`
+    const { error } = await supabase.storage
+      .from('images')
+      .upload(`services/${fileName}`, file)
+    if (error) throw error
+    const { data: urlData } = supabase.storage
+      .from('images')
+      .getPublicUrl(`services/${fileName}`)
+    return urlData.publicUrl
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const payload = { name, price: Number(price), duration_minutes: Number(duration), description }
-    if (editId) {
-      await supabase.from('services').update(payload).eq('id', editId)
-    } else {
-      await supabase.from('services').insert(payload)
+    setUploading(true)
+    try {
+      const payload = { name, price: Number(price), duration_minutes: Number(duration), description }
+      if (photoFile) {
+        payload.image_url = await uploadPhoto(photoFile)
+      }
+      if (editId) {
+        await supabase.from('services').update(payload).eq('id', editId)
+      } else {
+        await supabase.from('services').insert(payload)
+      }
+      setName(''); setPrice(''); setDuration(''); setDescription(''); setPhotoFile(null); setEditId(null)
+      loadServices()
+    } catch (err) {
+      alert('Ошибка загрузки фото: ' + err.message)
     }
-    setName(''); setPrice(''); setDuration(''); setDescription(''); setEditId(null)
-    loadServices()
+    setUploading(false)
   }
 
   const handleEdit = (s) => {
@@ -55,11 +79,17 @@ export default function AdminServices() {
         </div>
         <input placeholder="Описание" value={description} onChange={e => setDescription(e.target.value)}
           className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white" />
+        <div>
+          <label className="block mb-1 text-sm text-zinc-400">Фото услуги</label>
+          <input type="file" accept="image/*" onChange={e => setPhotoFile(e.target.files[0])}
+            className="w-full text-sm text-zinc-400 file:mr-2 file:py-1 file:px-3 file:rounded file:bg-amber-500 file:text-black file:border-0" />
+        </div>
         <div className="flex gap-2">
-          <button type="submit" className="px-4 py-2 bg-amber-500 text-black font-semibold rounded hover:bg-amber-400">
-            {editId ? 'Обновить' : 'Добавить'}
+          <button type="submit" disabled={uploading}
+            className="px-4 py-2 bg-amber-500 text-black font-semibold rounded hover:bg-amber-400 disabled:opacity-50">
+            {uploading ? 'Загрузка...' : editId ? 'Обновить' : 'Добавить'}
           </button>
-          {editId && <button type="button" onClick={() => { setEditId(null); setName(''); setPrice(''); setDuration(''); setDescription('') }}
+          {editId && <button type="button" onClick={() => { setEditId(null); setName(''); setPrice(''); setDuration(''); setDescription(''); setPhotoFile(null) }}
             className="px-4 py-2 bg-zinc-700 text-white rounded hover:bg-zinc-600">Отмена</button>}
         </div>
       </form>
@@ -67,9 +97,12 @@ export default function AdminServices() {
       <div className="space-y-2">
         {services.map(s => (
           <div key={s.id} className="bg-zinc-900 border border-zinc-800 rounded-lg p-3 flex justify-between items-center">
-            <div>
-              <span className="font-bold">{s.name}</span>
-              <span className="text-zinc-400 ml-2">{s.price}₽ • {s.duration_minutes}мин</span>
+            <div className="flex items-center gap-3">
+              {s.image_url && <img src={s.image_url} alt={s.name} className="w-10 h-10 rounded object-cover" />}
+              <div>
+                <span className="font-bold">{s.name}</span>
+                <span className="text-zinc-400 ml-2">{s.price}₽ • {s.duration_minutes}мин</span>
+              </div>
             </div>
             <div className="flex gap-2">
               <button onClick={() => handleEdit(s)} className="text-amber-500 hover:underline text-sm">Ред.</button>
