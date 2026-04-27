@@ -40,6 +40,16 @@ function BookingContent() {
         }
       }
     })
+
+    // Подтягиваем телефон и имя из профиля, если пользователь авторизован
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        const phone = user.user_metadata?.phone
+        const name = user.user_metadata?.name || user.email
+        if (phone) setClientPhone(phone)
+        if (name) setClientName(name)
+      }
+    })
   }, [initialServiceId])
 
   useEffect(() => {
@@ -82,7 +92,6 @@ function BookingContent() {
       .neq('status', 'cancelled')
 
     const freeSlots = slots.filter(slot => {
-      // Не показываем прошедшие слоты
       if (slot < now) return false
       const slotEnd = addMinutes(slot, slotDuration)
       return !appointments?.some(app => {
