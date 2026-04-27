@@ -7,7 +7,7 @@ const DAYS = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб']
 export default function AdminBarbers() {
   const [barbers, setBarbers] = useState([])
   const [name, setName] = useState('')
-  const [photoUrl, setPhotoUrl] = useState('')
+  const [photoFile, setPhotoFile] = useState(null)
   const [position, setPosition] = useState('')
   const [bio, setBio] = useState('')
   const [editId, setEditId] = useState(null)
@@ -16,6 +16,7 @@ export default function AdminBarbers() {
   const [day, setDay] = useState('1')
   const [start, setStart] = useState('09:00')
   const [end, setEnd] = useState('18:00')
+  const [uploading, setUploading] = useState(false)
 
   useEffect(() => { loadBarbers() }, [])
 
@@ -29,20 +30,44 @@ export default function AdminBarbers() {
     setHours(data || [])
   }
 
+  const uploadPhoto = async (file) => {
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${Date.now()}.${fileExt}`
+    const { data, error } = await supabase.storage
+      .from('images')
+      .upload(`barbers/${fileName}`, file)
+    if (error) throw error
+    const { data: urlData } = supabase.storage
+      .from('images')
+      .getPublicUrl(`barbers/${fileName}`)
+    return urlData.publicUrl
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const payload = { name, photo_url: photoUrl, position, bio }
-    if (editId) {
-      await supabase.from('barbers').update(payload).eq('id', editId)
-    } else {
-      await supabase.from('barbers').insert(payload)
+    setUploading(true)
+    let photoUrl = ''
+    try {
+      if (photoFile) {
+        photoUrl = await uploadPhoto(photoFile)
+      }
+      const payload = { name, position, bio }
+      if (photoUrl) payload.photo_url = photoUrl
+      if (editId) {
+        await supabase.from('barbers').update(payload).eq('id', editId)
+      } else {
+        await supabase.from('barbers').insert(payload)
+      }
+      setName(''); setPhotoFile(null); setPosition(''); setBio(''); setEditId(null)
+      loadBarbers()
+    } catch (err) {
+      alert('Ошибка загрузки фото: ' + err.message)
     }
-    setName(''); setPhotoUrl(''); setPosition(''); setBio(''); setEditId(null)
-    loadBarbers()
+    setUploading(false)
   }
 
   const handleEdit = (b) => {
-    setName(b.name); setPhotoUrl(b.photo_url || ''); setPosition(b.position || ''); setBio(b.bio || '')
+    setName(b.name); setPosition(b.position || ''); setBio(b.bio || '')
     setEditId(b.id); setSelectedBarber(b.id); loadHours(b.id)
   }
 
@@ -75,17 +100,21 @@ export default function AdminBarbers() {
         <h3 className="font-bold text-amber-500">{editId ? 'Редактировать' : 'Добавить'} мастера</h3>
         <input placeholder="Имя" value={name} onChange={e => setName(e.target.value)} required
           className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white" />
-        <input placeholder="URL фото (необязательно)" value={photoUrl} onChange={e => setPhotoUrl(e.target.value)}
-          className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white" />
+        <div>
+          <label className="block mb-1 text-sm text-zinc-400">Фото</label>
+          <input type="file" accept="image/*" onChange={e => setPhotoFile(e.target.files[0])}
+            className="w-full text-sm text-zinc-400 file:mr-2 file:py-1 file:px-3 file:rounded file:bg-amber-500 file:text-black file:border-0" />
+        </div>
         <input placeholder="Должность" value={position} onChange={e => setPosition(e.target.value)}
           className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white" />
         <input placeholder="Био" value={bio} onChange={e => setBio(e.target.value)}
           className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white" />
         <div className="flex gap-2">
-          <button type="submit" className="px-4 py-2 bg-amber-500 text-black font-semibold rounded hover:bg-amber-400">
-            {editId ? 'Обновить' : 'Добавить'}
+          <button type="submit" disabled={uploading}
+            className="px-4 py-2 bg-amber-500 text-black font-semibold rounded hover:bg-amber-400 disabled:opacity-50">
+            {uploading ? 'Загрузка...' : editId ? 'Обновить' : 'Добавить'}
           </button>
-          {editId && <button type="button" onClick={() => { setEditId(null); setName(''); setPhotoUrl(''); setPosition(''); setBio(''); setSelectedBarber(null); setHours([]) }}
+          {editId && <button type="button" onClick={() => { setEditId(null); setName(''); setPhotoFile(null); setPosition(''); setBio(''); setSelectedBarber(null); setHours([]) }}
             className="px-4 py-2 bg-zinc-700 text-white rounded hover:bg-zinc-600">Отмена</button>}
         </div>
       </form>
