@@ -50,7 +50,9 @@ export default function Header() {
               <Link href="/my-bookings" className="hover:text-amber-400">Мои записи</Link>
               {user ? (
                 <>
-                  <span className="text-zinc-400">{user.user_metadata?.name || user.email}</span>
+                  <Link href="/profile" className="text-amber-400 hover:underline">
+                    {user.user_metadata?.name || user.email}
+                  </Link>
                   <button onClick={handleLogout} className="text-red-400 hover:underline">Выйти</button>
                 </>
               ) : (

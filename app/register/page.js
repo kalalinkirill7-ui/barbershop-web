@@ -16,6 +16,12 @@ export default function Register() {
     e.preventDefault()
     setError('')
     setSuccess('')
+    
+    if (!name || !phone) {
+      setError('Имя и телефон обязательны')
+      return
+    }
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -24,12 +30,10 @@ export default function Register() {
     if (error) {
       setError(error.message)
     } else {
-      setSuccess('Регистрация успешна! Сейчас войдём автоматически...')
-      // Пробуем сразу войти
+      setSuccess('Регистрация успешна!')
       const { error: loginError } = await supabase.auth.signInWithPassword({ email, password })
       if (loginError) {
-        setError('Автоматический вход не удался. Войдите вручную.')
-        setTimeout(() => router.push('/login'), 2000)
+        setTimeout(() => router.push('/login'), 1500)
       } else {
         router.push('/my-bookings')
       }
@@ -40,13 +44,13 @@ export default function Register() {
     <div className="flex items-center justify-center min-h-[60vh]">
       <form onSubmit={handleRegister} className="bg-zinc-900 p-6 rounded-lg border border-zinc-800 w-full max-w-sm space-y-4">
         <h2 className="text-xl font-bold">Регистрация</h2>
-        <input type="text" placeholder="Ваше имя" value={name} onChange={e => setName(e.target.value)} required
+        <input type="text" placeholder="Ваше имя *" value={name} onChange={e => setName(e.target.value)} required
           className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white" />
-        <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} required
+        <input type="email" placeholder="Email *" value={email} onChange={e => setEmail(e.target.value)} required
           className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white" />
-        <input type="password" placeholder="Пароль" value={password} onChange={e => setPassword(e.target.value)} required
+        <input type="password" placeholder="Пароль *" value={password} onChange={e => setPassword(e.target.value)} required
           className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white" />
-        <input type="tel" placeholder="Телефон (для записей)" value={phone} onChange={e => setPhone(e.target.value)}
+        <input type="tel" placeholder="Телефон * (для записей)" value={phone} onChange={e => setPhone(e.target.value)} required
           className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white" />
         {error && <p className="text-red-500 text-sm">{error}</p>}
         {success && <p className="text-green-500 text-sm">{success}</p>}
