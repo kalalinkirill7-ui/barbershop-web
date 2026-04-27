@@ -11,16 +11,12 @@ export default function Header() {
   const [user, setUser] = useState(null)
 
   useEffect(() => {
-    // Получаем текущего пользователя при загрузке
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user ?? null)
     })
-
-    // Подписываемся на изменения авторизации (вход/выход)
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
     })
-
     return () => listener.subscription.unsubscribe()
   }, [])
 
@@ -36,7 +32,7 @@ export default function Header() {
           href={isAdmin ? '/admin' : '/'}
           className="text-2xl font-black uppercase text-amber-500 tracking-wider"
         >
-          BRUTAL
+          {isAdmin ? 'АДМИНКА' : 'ГЛАВНАЯ'}
         </Link>
         <nav className="flex gap-6 text-sm font-medium items-center">
           {isAdmin ? (
