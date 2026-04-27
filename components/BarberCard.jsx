@@ -1,13 +1,25 @@
+'use client'
+import { useLightbox } from '@/components/LightboxProvider'
+
 export default function BarberCard({ barber }) {
+  const { openLightbox } = useLightbox()
+
   return (
     <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
-      <div className="aspect-square bg-zinc-800 flex items-center justify-center">
+      <div className="aspect-square bg-zinc-800 flex items-center justify-center overflow-hidden">
         {barber.photo_url ? (
-          <a href={barber.photo_url} target="_blank" rel="noreferrer" className="w-full h-full flex items-center justify-center">
-            <img src={barber.photo_url} alt={barber.name} className="max-w-full max-h-full object-contain" />
-          </a>
+          <button
+            onClick={() => openLightbox(barber.photo_url, barber.name)}
+            className="w-full h-full flex items-center justify-center"
+          >
+            <img 
+              src={barber.photo_url} 
+              alt={barber.name} 
+              className="w-full h-full object-cover" 
+            />
+          </button>
         ) : (
-          <span className="text-4xl text-zinc-600">💈</span>
+          <span className="text-6xl text-zinc-600">💈</span>
         )}
       </div>
       <div className="p-4">
