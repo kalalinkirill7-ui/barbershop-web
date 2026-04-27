@@ -49,6 +49,7 @@ function BookingContent() {
   const loadSlots = async () => {
     setSlotsLoading(true)
     setAvailableSlots([])
+    const now = new Date()
     const date = new Date(selectedDate)
     const dayOfWeek = date.getDay()
     const { data: hoursData } = await supabase
@@ -81,6 +82,8 @@ function BookingContent() {
       .neq('status', 'cancelled')
 
     const freeSlots = slots.filter(slot => {
+      // Не показываем прошедшие слоты
+      if (slot < now) return false
       const slotEnd = addMinutes(slot, slotDuration)
       return !appointments?.some(app => {
         const appStart = new Date(app.start_time)
@@ -109,7 +112,6 @@ function BookingContent() {
     })
     if (error) setBookingError('Ошибка записи: ' + error.message)
     else {
-      // Отправляем уведомление в Telegram
       try {
         await fetch('/api/notify', {
           method: 'POST',
@@ -213,14 +215,12 @@ function BookingContent() {
             ✅ Запись создана! <br />
             <span className="text-base text-zinc-400">Ждём вас {selectedTime ? format(selectedTime, 'dd.MM.yyyy в HH:mm') : ''}</span>
           </div>
-          
           {!reviewSubmitted && (
             <div className="max-w-md mx-auto mb-8">
               <h3 className="text-lg font-semibold text-center mb-4">Как вам сервис? Оставьте отзыв!</h3>
               <ReviewForm phone={clientPhone} onSuccess={() => setReviewSubmitted(true)} />
             </div>
           )}
-
           <div className="text-center mt-6">
             <button onClick={() => { setStep(0); setSelectedService(null); setSelectedBarber(null); setReviewSubmitted(false) }}
               className="px-6 py-2 bg-amber-500 text-black font-semibold rounded hover:bg-amber-400">
