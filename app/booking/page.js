@@ -3,6 +3,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { format, addMinutes, isBefore, startOfDay } from 'date-fns'
+import ReviewForm from '@/components/ReviewForm'
 
 const STEPS = ['Услуга', 'Мастер', 'Дата и время', 'Контакты', 'Подтверждение']
 
@@ -22,6 +23,7 @@ function BookingContent() {
   const [clientName, setClientName] = useState('')
   const [clientPhone, setClientPhone] = useState('')
   const [bookingError, setBookingError] = useState('')
+  const [reviewSubmitted, setReviewSubmitted] = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -106,7 +108,23 @@ function BookingContent() {
       status: 'pending'
     })
     if (error) setBookingError('Ошибка записи: ' + error.message)
-    else setStep(5)
+    else {
+      // Отправляем уведомление в Telegram
+      try {
+        await fetch('/api/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            client_name: clientName,
+            client_phone: clientPhone,
+            service: selectedService.name,
+            barber: selectedBarber.name,
+            date: format(selectedTime, 'dd.MM.yyyy в HH:mm')
+          })
+        })
+      } catch (e) {}
+      setStep(5)
+    }
   }
 
   return (
@@ -190,11 +208,21 @@ function BookingContent() {
         </div>
       )}
       {step === 5 && (
-        <div className="text-center text-green-400 text-2xl font-bold">
-          ✅ Запись создана! <br />
-          <span className="text-base text-zinc-400">Ждём вас {selectedTime ? format(selectedTime, 'dd.MM.yyyy в HH:mm') : ''}</span>
-          <div className="mt-6">
-            <button onClick={() => { setStep(0); setSelectedService(null); setSelectedBarber(null) }}
+        <div>
+          <div className="text-center text-green-400 text-2xl font-bold mb-8">
+            ✅ Запись создана! <br />
+            <span className="text-base text-zinc-400">Ждём вас {selectedTime ? format(selectedTime, 'dd.MM.yyyy в HH:mm') : ''}</span>
+          </div>
+          
+          {!reviewSubmitted && (
+            <div className="max-w-md mx-auto mb-8">
+              <h3 className="text-lg font-semibold text-center mb-4">Как вам сервис? Оставьте отзыв!</h3>
+              <ReviewForm phone={clientPhone} onSuccess={() => setReviewSubmitted(true)} />
+            </div>
+          )}
+
+          <div className="text-center mt-6">
+            <button onClick={() => { setStep(0); setSelectedService(null); setSelectedBarber(null); setReviewSubmitted(false) }}
               className="px-6 py-2 bg-amber-500 text-black font-semibold rounded hover:bg-amber-400">
               Новая запись
             </button>

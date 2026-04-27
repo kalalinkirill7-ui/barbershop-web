@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
 
-export default function ReviewForm() {
+export default function ReviewForm({ phone = '', onSuccess }) {
   const [name, setName] = useState('')
   const [text, setText] = useState('')
   const [rating, setRating] = useState(0)
@@ -17,12 +17,15 @@ export default function ReviewForm() {
     const { error } = await supabase.from('reviews').insert({
       author_name: name,
       text,
-      rating
+      rating,
+      client_phone: phone || null,
+      verified: !!phone
     })
     if (error) setStatus('Ошибка: ' + error.message)
     else {
       setStatus('Спасибо за отзыв!')
       setName(''); setText(''); setRating(0)
+      if (onSuccess) onSuccess()
     }
   }
 

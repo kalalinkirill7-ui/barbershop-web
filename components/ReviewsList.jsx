@@ -6,7 +6,12 @@ export default function ReviewsList({ reviews }) {
       {reviews.map(r => (
         <div key={r.id} className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
           <div className="flex justify-between items-start mb-2">
-            <span className="font-bold">{r.author_name}</span>
+            <div>
+              <span className="font-bold">{r.author_name}</span>
+              {r.verified && (
+                <span className="ml-2 text-xs bg-green-900 text-green-400 px-2 py-0.5 rounded-full">Проверенный клиент</span>
+              )}
+            </div>
             <span className="text-amber-500">{'★'.repeat(r.rating)}{'☆'.repeat(5-r.rating)}</span>
           </div>
           <p className="text-zinc-300">{r.text}</p>
