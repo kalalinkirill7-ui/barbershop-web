@@ -5,11 +5,15 @@ import { supabase } from '@/lib/supabase'
 export default function ReviewForm() {
   const [name, setName] = useState('')
   const [text, setText] = useState('')
-  const [rating, setRating] = useState(5)
+  const [rating, setRating] = useState(0)
   const [status, setStatus] = useState('')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (rating === 0) {
+      setStatus('Поставьте оценку')
+      return
+    }
     const { error } = await supabase.from('reviews').insert({
       author_name: name,
       text,
@@ -18,7 +22,7 @@ export default function ReviewForm() {
     if (error) setStatus('Ошибка: ' + error.message)
     else {
       setStatus('Спасибо за отзыв!')
-      setName(''); setText(''); setRating(5)
+      setName(''); setText(''); setRating(0)
     }
   }
 
@@ -31,12 +35,15 @@ export default function ReviewForm() {
         className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded text-white" />
       <div className="flex items-center gap-2">
         <span className="text-sm text-zinc-400">Оценка:</span>
-        {[5,4,3,2,1].map(n => (
-          <button type="button" key={n} onClick={() => setRating(n)}
-            className={`text-xl ${n <= rating ? 'text-amber-500' : 'text-zinc-600'}`}>
-            ★
-          </button>
-        ))}
+        <div className="flex flex-row-reverse gap-1">
+          {[5,4,3,2,1].map(n => (
+            <button type="button" key={n} onClick={() => setRating(n)}
+              className={`text-2xl transition-colors ${n <= rating ? 'text-amber-500' : 'text-zinc-600 hover:text-amber-400'}`}>
+              ★
+            </button>
+          ))}
+        </div>
+        {rating > 0 && <span className="text-sm text-amber-500 ml-2">{rating}/5</span>}
       </div>
       <button type="submit" className="px-4 py-2 bg-amber-500 text-black font-semibold rounded hover:bg-amber-400">
         Отправить
