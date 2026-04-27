@@ -52,23 +52,28 @@ export default function AdminAppointments() {
         </select>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         {appointments.map(a => (
-          <div key={a.id} className="bg-zinc-900 border border-zinc-800 rounded-lg p-3 flex flex-wrap justify-between items-center gap-2">
-            <div>
-              <span className="font-bold">{a.client_name}</span>
-              <span className="text-zinc-400 ml-2">{a.services?.name}</span>
-              <span className="text-zinc-500 ml-2">| {a.barbers?.name}</span>
-              <span className="text-zinc-500 ml-2">| {formatDate(a.start_time)}</span>
-              <span className={`ml-2 font-semibold ${statusColor[a.status]}`}>{a.status}</span>
-            </div>
-            <div className="flex gap-1">
-              <button onClick={() => updateStatus(a.id, 'confirmed')} disabled={a.status === 'confirmed'}
-                className="px-2 py-1 bg-green-900 text-green-400 rounded text-xs hover:bg-green-800 disabled:opacity-30">Подтв.</button>
-              <button onClick={() => updateStatus(a.id, 'completed')} disabled={a.status === 'completed'}
-                className="px-2 py-1 bg-blue-900 text-blue-400 rounded text-xs hover:bg-blue-800 disabled:opacity-30">Вып.</button>
-              <button onClick={() => updateStatus(a.id, 'cancelled')} disabled={a.status === 'cancelled'}
-                className="px-2 py-1 bg-red-900 text-red-400 rounded text-xs hover:bg-red-800 disabled:opacity-30">Отм.</button>
+          <div key={a.id} className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+            <div className="flex flex-wrap justify-between items-start gap-2">
+              <div className="space-y-1">
+                <p><span className="font-bold text-lg">{a.client_name}</span></p>
+                <p className="text-zinc-400">📞 <span className="text-white">{a.client_phone}</span></p>
+                <p className="text-zinc-400">💇 {a.services?.name}</p>
+                <p className="text-zinc-400">💈 {a.barbers?.name}</p>
+                <p className="text-zinc-400">📅 {formatDate(a.start_time)}</p>
+                <p className={`font-semibold ${statusColor[a.status]}`}>
+                  Статус: {a.status === 'pending' ? 'Ожидает' : a.status === 'confirmed' ? 'Подтверждена' : a.status === 'cancelled' ? 'Отменена' : 'Выполнена'}
+                </p>
+              </div>
+              <div className="flex gap-1">
+                <button onClick={() => updateStatus(a.id, 'confirmed')} disabled={a.status === 'confirmed'}
+                  className="px-3 py-1 bg-green-900 text-green-400 rounded text-sm hover:bg-green-800 disabled:opacity-30">Подтв.</button>
+                <button onClick={() => updateStatus(a.id, 'completed')} disabled={a.status === 'completed'}
+                  className="px-3 py-1 bg-blue-900 text-blue-400 rounded text-sm hover:bg-blue-800 disabled:opacity-30">Вып.</button>
+                <button onClick={() => updateStatus(a.id, 'cancelled')} disabled={a.status === 'cancelled'}
+                  className="px-3 py-1 bg-red-900 text-red-400 rounded text-sm hover:bg-red-800 disabled:opacity-30">Отм.</button>
+              </div>
             </div>
           </div>
         ))}
