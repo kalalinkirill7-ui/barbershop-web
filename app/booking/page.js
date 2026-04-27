@@ -207,7 +207,7 @@ function BookingContent() {
 
 export default function BookingPage() {
   return (
-    <Suspense fallback={<div className="text-center py-20">Загрузка...</div>}>
+    <Suspense fallback={<div className="text-center py-20 text-zinc-400">Загрузка...</div>}>
       <BookingContent />
     </Suspense>
   )
