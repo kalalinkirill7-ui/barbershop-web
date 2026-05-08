@@ -6,14 +6,16 @@ import BarberCard from '@/components/BarberCard'
 import ReviewForm from '@/components/ReviewForm'
 import ReviewsList from '@/components/ReviewsList'
 import GallerySection from '@/components/GallerySection'
+import ContactSection from '@/components/ContactSection'
 
 export default function Home() {
   const [services, setServices] = useState([])
   const [barbers, setBarbers] = useState([])
   const [gallery, setGallery] = useState([])
   const [reviews, setReviews] = useState([])
-  const [heroTitle, setHeroTitle] = useState('Брутальный стиль')
-  const [heroText, setHeroText] = useState('Почувствуй уверенность с каждой стрижкой')
+  const [heroTitle, setHeroTitle] = useState('Добро пожаловать')
+  const [heroText, setHeroText] = useState('')
+  const [contacts, setContacts] = useState([])
 
   useEffect(() => {
     Promise.all([
@@ -31,39 +33,42 @@ export default function Home() {
       const text = c.data?.find(i => i.key === 'hero_text')?.value
       if (title) setHeroTitle(title)
       if (text) setHeroText(text)
+      setContacts(c.data?.filter(i => ['phone', 'address', 'telegram', 'whatsapp', 'map_link'].includes(i.key)) || [])
     })
   }, [])
 
   return (
-    <div>
-      <section className="py-20 text-center border-b border-zinc-800">
-        <h1 className="text-6xl md:text-7xl font-black uppercase text-amber-500 mb-4">{heroTitle}</h1>
-        <p className="text-xl text-zinc-400 max-w-2xl mx-auto px-4">{heroText}</p>
+    <div className="min-h-screen">
+      <section className="py-20 text-center">
+        <h1 className="text-5xl md:text-7xl font-black text-gray-800 mb-4 tracking-tight">{heroTitle}</h1>
+        {heroText && <p className="text-xl text-gray-500 max-w-2xl mx-auto px-4">{heroText}</p>}
       </section>
 
-      <section className="py-16 container mx-auto px-4">
-        <h2 className="text-3xl font-bold mb-8 text-center">Услуги и цены</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <section className="py-16 max-w-6xl mx-auto px-5">
+        <h2 className="text-3xl font-bold mb-8 text-center text-gray-800">Услуги и цены</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {services.map(s => <ServiceCard key={s.id} service={s} />)}
         </div>
       </section>
 
-      <section className="py-16 container mx-auto px-4 border-t border-zinc-800">
-        <h2 className="text-3xl font-bold mb-8 text-center">Наши мастера</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <section className="py-16 max-w-6xl mx-auto px-5 bg-gray-50">
+        <h2 className="text-3xl font-bold mb-8 text-center text-gray-800">Наши мастера</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {barbers.map(b => <BarberCard key={b.id} barber={b} />)}
         </div>
       </section>
 
       <GallerySection gallery={gallery} />
 
-      <section className="py-16 container mx-auto px-4 border-t border-zinc-800">
-        <h2 className="text-3xl font-bold mb-8 text-center">Отзывы</h2>
-        <div className="max-w-2xl mx-auto mb-12">
+      <section className="py-16 max-w-3xl mx-auto px-5">
+        <h2 className="text-3xl font-bold mb-8 text-center text-gray-800">Отзывы</h2>
+        <div className="mb-12">
           <ReviewForm />
         </div>
         <ReviewsList reviews={reviews} />
       </section>
+
+      <ContactSection contacts={contacts} />
     </div>
   )
 }
